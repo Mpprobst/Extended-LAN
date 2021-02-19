@@ -21,10 +21,12 @@
   <ItemGroup>
     <ClCompile Include="Bridge.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Network.cpp" />
     <ClCompile Include="Port.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Bridge.h" />
+    <ClInclude Include="Network.h" />
     <ClInclude Include="Port.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

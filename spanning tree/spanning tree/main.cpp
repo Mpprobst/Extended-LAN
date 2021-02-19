@@ -3,11 +3,9 @@
 // AUTHOR: Michael Probst
 
 #include <iostream>
+#include "Network.h"
 using namespace std;
 
-int main() {
-	string input = "";
-	cout << "What is your name?";
-	cin >> input;
-	cout << "Did you say you name is Butt Poopington>? That's a silly name." << endl;
+int main(int argc, char* argv[]) {
+	Network net = Network(argv[1]);
 }

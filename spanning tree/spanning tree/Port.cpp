@@ -3,5 +3,5 @@
 #include "Port.h"
 
 char Port::GetID() {
-	return id;
+	return name;
 }
