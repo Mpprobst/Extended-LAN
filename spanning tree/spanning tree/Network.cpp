@@ -15,9 +15,9 @@ Network::Network(string config_filename) {
 		Bridge * bridge = &AddBridge(line[0]-'0');
 		for (int i = 1; i < line.length(); i++) {
 			if (line[i] != ' ') {
-				Port port = AddPort(line[i]);
-				bridge->ConnectPort(port);
-				//port->ConnectBridge(bridge->GetID());
+				Port * port = &AddPort(line[i]);
+				bridge->ConnectPort(port->GetID());
+				port->ConnectBridge(bridge->GetID());
 			}
 		}
 	}
@@ -29,9 +29,10 @@ Network::Network(string config_filename) {
 	// DEBUG TO MAKE SURE EVERYTHING WORKED
 	for (int i = 0; i < nodes.size(); i++) {
 		cout << "Bridge " << nodes[i].GetID() << " has ports: ";
-		vector<Port> connections = nodes[i].GetConnections();
+		vector<char> connections = nodes[i].GetConnections();
 		for (int j = 0; j < connections.size(); j++) {
-			cout << connections[j].GetID() << " ";
+			Port port = GetPort(connections[j]);
+			cout << port.GetID() << " ";
 		}
 		cout << endl << endl;
 	}
@@ -40,7 +41,8 @@ Network::Network(string config_filename) {
 		cout << "Port " << ports[i].GetID() << " is connected to: ";
 		vector<int> bridges = ports[i].GetBridgeIDs();
 		for (int j = 0; j < bridges.size(); j++) {
-			cout << bridges[j] << " ";
+			Bridge bridge = GetBridge(bridges[j]);
+			cout << bridge.GetID() << " ";
 		}
 		cout << endl;
 	}
@@ -49,6 +51,21 @@ Network::Network(string config_filename) {
 
 	// TODO: get the minimum spanning tree now that the network is connected
 
+}
+
+Bridge Network::GetBridge(int id) {
+	for (int i = 0; i < nodes.size(); i++) {
+		if (nodes[i].GetID() == id) {
+			return nodes[i];
+		}
+	}
+}
+Port Network::GetPort(char name) {
+	for (int i = 0; i < ports.size(); i++) {
+		if (ports[i].GetID() == name) {
+			return ports[i];
+		}
+	}
 }
 
 /// <summary>
@@ -62,7 +79,7 @@ Bridge Network::AddBridge(int id) {
 	for (int i = 0; i < nodes.size(); i++) {
 		if (nodes[i].GetID() == id) {
 			bridge = nodes[i];
-			break;
+			return bridge;
 		}
 	}
 	nodes.push_back(bridge);
@@ -80,7 +97,7 @@ Port Network::AddPort(char name) {
 	for (int i = 0; i < ports.size(); i++) {
 		if (ports[i].GetID() == name) {
 			port = ports[i];
-			break;
+			return port;
 		}
 	}
 	ports.push_back(port);

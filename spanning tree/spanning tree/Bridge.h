@@ -28,14 +28,14 @@ class Bridge {
 	private:
 		int id;							// identifier for this Bridge
 		Configuration bestConfig;		// Best configuation for the node
-		vector<Port> connectedPorts;	// Array of ports connected to the bridge
+		vector<char> connectedPorts;	// Array of ports connected to the bridge
 		// Configuration[] portConfigs	// Best configuration for each of the bridge's ports
 
 	public:
 		int GetID();
 		void SetID(int newID);
-		vector<Port> GetConnections();
-		void ConnectPort(Port port);
+		vector<char> GetConnections();
+		void ConnectPort(char port);
 
 		Bridge(int _id) {
 			id = _id;

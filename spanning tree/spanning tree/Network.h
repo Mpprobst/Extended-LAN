@@ -3,6 +3,7 @@
 
 #include <string>
 #include <fstream>
+#include <iostream>
 #include "Bridge.h"
 using namespace std;
 
@@ -13,6 +14,8 @@ private:
 
 public:
 	Network(string config_filename);
+	Bridge GetBridge(int id);
+	Port GetPort(char name);
 	Bridge AddBridge(int id);
 	Port AddPort(char name);
 

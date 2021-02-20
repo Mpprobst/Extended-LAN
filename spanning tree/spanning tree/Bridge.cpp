@@ -11,12 +11,12 @@ void Bridge::SetID(int newID) {
 	id = newID;
 }
 
-vector<Port> Bridge::GetConnections() {
+vector<char> Bridge::GetConnections() {
 	return connectedPorts;
 }
 
 
-void Bridge::ConnectPort(Port port) {
+void Bridge::ConnectPort(char port) {
 	connectedPorts.push_back(port);
 }
 
