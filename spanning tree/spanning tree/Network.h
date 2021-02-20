@@ -1,7 +1,6 @@
 #pragma once
 // Network.h
 
-#include <vector>
 #include <string>
 #include <fstream>
 #include "Bridge.h"
@@ -16,4 +15,5 @@ public:
 	Network(string config_filename);
 	Bridge AddBridge(int id);
 	Port AddPort(char name);
+
 };

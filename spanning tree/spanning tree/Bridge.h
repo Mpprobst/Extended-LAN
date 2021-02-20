@@ -1,8 +1,6 @@
 #pragma once
 // Bridge.h
 #include "Port.h"
-#include <vector>
-
 using namespace std;
 
 // Struct containing informaton of configuration message

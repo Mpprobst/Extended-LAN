@@ -1,4 +1,8 @@
 #include "Network.h"
+#include <algorithm>
+
+//bool CompareBridge(Bridge a, Bridge b) { return a.GetID() < b.GetID(); }
+//bool ComparePort(Port a, Port b) { return a.GetID() < b.GetID(); }
 
 Network::Network(string config_filename) {
 	ifstream config_file;
@@ -8,26 +12,38 @@ Network::Network(string config_filename) {
 	while (!config_file.eof()) {
 		getline(config_file, line);
 		//TODO: parse the line and get a number, that is the bridge. The characters are the ports connected to the bridge
-		Bridge bridge = AddBridge(line[0]-'0');
+		Bridge * bridge = &AddBridge(line[0]-'0');
 		for (int i = 1; i < line.length(); i++) {
 			if (line[i] != ' ') {
 				Port port = AddPort(line[i]);
-				bridge.ConnectPort(port);
+				bridge->ConnectPort(port);
+				//port->ConnectBridge(bridge->GetID());
 			}
 		}
-		nodes.push_back(bridge);
 	}
 	config_file.close();
 
-	/* // DEBUG TO MAKE SURE EVERYTHING WORKED
+	//sort(nodes.begin(), nodes.end(), CompareBridge);
+	//sort(ports.begin(), ports.end());
+	
+	// DEBUG TO MAKE SURE EVERYTHING WORKED
 	for (int i = 0; i < nodes.size(); i++) {
 		cout << "Bridge " << nodes[i].GetID() << " has ports: ";
-		ports = nodes[i].GetConnections();
-		for (int j = 0; j < ports.size(); j++) {
-			cout << ports[j].GetID() << " ";
+		vector<Port> connections = nodes[i].GetConnections();
+		for (int j = 0; j < connections.size(); j++) {
+			cout << connections[j].GetID() << " ";
+		}
+		cout << endl << endl;
+	}
+
+	for (int i = 0; i < ports.size(); i++) {
+		cout << "Port " << ports[i].GetID() << " is connected to: ";
+		vector<int> bridges = ports[i].GetBridgeIDs();
+		for (int j = 0; j < bridges.size(); j++) {
+			cout << bridges[j] << " ";
 		}
 		cout << endl;
-	}*/
+	}
 
 	// TODO: Consider sorting ports and nodes for easier access later on.
 
@@ -49,6 +65,7 @@ Bridge Network::AddBridge(int id) {
 			break;
 		}
 	}
+	nodes.push_back(bridge);
 	return bridge;
 }
 
@@ -66,5 +83,6 @@ Port Network::AddPort(char name) {
 			break;
 		}
 	}
+	ports.push_back(port);
 	return port;
 }
