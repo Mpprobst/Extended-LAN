@@ -1,9 +1,6 @@
 #include "Network.h"
 #include <algorithm>
 
-//bool CompareBridge(Bridge a, Bridge b) { return a.GetID() < b.GetID(); }
-//bool ComparePort(Port a, Port b) { return a.GetID() < b.GetID(); }
-
 Network::Network(string config_filename) {
 	ifstream config_file;
 	string line;
@@ -12,21 +9,33 @@ Network::Network(string config_filename) {
 	while (!config_file.eof()) {
 		getline(config_file, line);
 		//TODO: parse the line and get a number, that is the bridge. The characters are the ports connected to the bridge
-		Bridge * bridge = &AddBridge(line[0]-'0');
+		Bridge bridge = CreateBridge(line[0]-'0');
 		for (int i = 1; i < line.length(); i++) {
 			if (line[i] != ' ') {
-				Port * port = &AddPort(line[i]);
-				bridge->ConnectPort(port->GetID());
-				port->ConnectBridge(bridge->GetID());
+				Port port = CreatePort(line[i]);
+				bridge.ConnectPort(port.GetID());
+				AddPort(port);
+			}
+		}
+		AddBridge(bridge);
+	}
+
+	// add bridge refs to ports
+	for (int i = 0; i < ports.size(); i++) {
+		for (int j = 0; j < nodes.size(); j++) {
+			vector<char> connections = nodes[j].GetConnections();
+			for (int k = 0; k < connections.size(); k++) {
+				if (connections[k] == ports[i].GetID()) {
+					ports[i].ConnectBridge(nodes[j].GetID());
+				}
 			}
 		}
 	}
-	config_file.close();
 
-	//sort(nodes.begin(), nodes.end(), CompareBridge);
-	//sort(ports.begin(), ports.end());
+	config_file.close();
 	
 	// DEBUG TO MAKE SURE EVERYTHING WORKED
+	cout << "CHECK BRIDGE CONNECTIONS" << endl;
 	for (int i = 0; i < nodes.size(); i++) {
 		cout << "Bridge " << nodes[i].GetID() << " has ports: ";
 		vector<char> connections = nodes[i].GetConnections();
@@ -34,9 +43,10 @@ Network::Network(string config_filename) {
 			Port port = GetPort(connections[j]);
 			cout << port.GetID() << " ";
 		}
-		cout << endl << endl;
+		cout << endl;
 	}
 
+	cout << endl << "CHECK PORT CONNECTIONS" << endl;
 	for (int i = 0; i < ports.size(); i++) {
 		cout << "Port " << ports[i].GetID() << " is connected to: ";
 		vector<int> bridges = ports[i].GetBridgeIDs();
@@ -53,19 +63,48 @@ Network::Network(string config_filename) {
 
 }
 
+/// <summary>
+/// Finda a bridge by its id. If that bridge doesn't exist, its id will be -1/
+/// </summary>
+/// <param name="id"></param>
+/// <returns></returns>
 Bridge Network::GetBridge(int id) {
 	for (int i = 0; i < nodes.size(); i++) {
 		if (nodes[i].GetID() == id) {
 			return nodes[i];
 		}
 	}
+	return Bridge(-1);
 }
+
+/// <summary>
+/// Finds a port in the network by its name. If that port does not exist, a port with id = ? is returned
+/// </summary>
+/// <param name="name"></param>
+/// <returns></returns>
 Port Network::GetPort(char name) {
 	for (int i = 0; i < ports.size(); i++) {
 		if (ports[i].GetID() == name) {
 			return ports[i];
 		}
 	}
+	return Port('?');
+}
+
+Bridge Network::CreateBridge(int id) {
+	Bridge bridge = GetBridge(id);
+	if (bridge.GetID() == -1) {
+		bridge = Bridge(id);
+	}
+	return bridge;
+}
+
+Port Network::CreatePort(char name) {
+	Port port = GetPort(name);
+	if (port.GetID() == '?') {
+		port = Port(name);
+	}
+	return port;
 }
 
 /// <summary>
@@ -74,16 +113,11 @@ Port Network::GetPort(char name) {
 /// </summary>
 /// <param name="id"></param>
 /// <returns></returns>
-Bridge Network::AddBridge(int id) {
-	Bridge bridge = Bridge(id);
-	for (int i = 0; i < nodes.size(); i++) {
-		if (nodes[i].GetID() == id) {
-			bridge = nodes[i];
-			return bridge;
-		}
+void Network::AddBridge(Bridge node) {
+	Bridge bridge = GetBridge(node.GetID());
+	if (bridge.GetID() == -1) {
+		nodes.push_back(node);
 	}
-	nodes.push_back(bridge);
-	return bridge;
 }
 
 /// <summary>
@@ -92,14 +126,9 @@ Bridge Network::AddBridge(int id) {
 /// </summary>
 /// <param name="name"></param>
 /// <returns></returns>
-Port Network::AddPort(char name) {
-	Port port = Port(name);
-	for (int i = 0; i < ports.size(); i++) {
-		if (ports[i].GetID() == name) {
-			port = ports[i];
-			return port;
-		}
+void Network::AddPort(Port port) {
+	Port p = GetPort(port.GetID());
+	if (p.GetID() == '?') {
+		ports.push_back(port);
 	}
-	ports.push_back(port);
-	return port;
 }
