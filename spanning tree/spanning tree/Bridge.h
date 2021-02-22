@@ -7,16 +7,16 @@ using namespace std;
 struct Configuration {
 	int root;			// The believed root
 	int rootDist;		// Distance to believed root
-	int fromPort;		// ID of Which port did the config come from
+	char fromPort;		// ID of Which port did the config come from
 	int fromNode;		// ID of Which node (bridge) did the config come from
 
 	Configuration() {
 		root = 0;
 		rootDist = 0;
-		fromPort = 0;
+		fromPort = ' ';
 		fromNode = 0;
 	}
-	Configuration(int _root, int dist, int port, int node) {
+	Configuration(int _root, int dist, char port, int node) {
 		root = _root;
 		rootDist = dist;
 		fromPort = port;
@@ -33,12 +33,14 @@ class Bridge {
 
 	public:
 		int GetID();
+		Configuration GetConfiguration();
 		void SetID(int newID);
 		vector<char> GetConnections();
 		void ConnectPort(char port);
+		void ReceiveMessage(Configuration message);
 
 		Bridge(int _id) {
 			id = _id;
-			bestConfig = Configuration(id, 0, 0, id);
+			bestConfig = Configuration(id, 10, ' ', id);		// dist set to 10 initially so config messages will actually choose a new root
 		}
 };

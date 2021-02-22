@@ -1,5 +1,6 @@
 #include "Network.h"
 #include <algorithm>
+#include <stack>
 
 Network::Network(string config_filename) {
 	ifstream config_file;
@@ -19,7 +20,7 @@ Network::Network(string config_filename) {
 		}
 		AddBridge(bridge);
 	}
-
+	
 	// add bridge refs to ports
 	for (int i = 0; i < ports.size(); i++) {
 		for (int j = 0; j < nodes.size(); j++) {
@@ -34,6 +35,62 @@ Network::Network(string config_filename) {
 
 	config_file.close();
 	
+	// TODO: Consider sorting ports and nodes for easier access later on.
+	
+	// Choose bridge with smallest ID as root
+	Bridge root = nodes[0];
+	for (int i = 0; i < nodes.size(); i++) {
+		if (nodes[i].GetID() < root.GetID()) {
+			root = nodes[i];
+		}
+	}
+	
+	// Identify root as root
+	root.ReceiveMessage(Configuration(root.GetID(), 0, ' ', root.GetID()));		// declare the root
+	vector<int> closedNodes;				// vector containing IDs of bridges that have sent config messages on their ports
+	stack<int> openNodes;					// vector containint IDs of bridges yet to send messages
+	openNodes.push(root.GetID());
+
+	Bridge sender = root;
+	// BFS approach for forwarding messages
+	cout << "CONFIGURING NETWORK" << endl;
+	while (openNodes.size() > 0 && closedNodes.size() < nodes.size()) { 
+		sender = GetBridge(openNodes.top());
+		openNodes.pop();
+		bool visited = false;
+		for (int i = 0; i < closedNodes.size(); i++) {
+			if (closedNodes[i] == sender.GetID()) {
+				visited = true;
+			}
+		}
+
+		if (visited) {
+			continue;
+		}
+
+		Configuration message = sender.GetConfiguration();
+		message.rootDist += 1;
+		message.fromNode = sender.GetID();
+		vector<char> ports = sender.GetConnections();
+		for (int i = 0; i < ports.size(); i++) {
+			Port port = GetPort(ports[i]);
+			vector<int> connections = port.GetBridgeIDs();
+			for (int j = 0; j < connections.size(); j++) {
+				// Dont forward a message back to where it came from
+				if (connections[j] == message.fromNode) {
+					continue;
+				}
+				Bridge bridge = GetBridge(connections[j]);
+				openNodes.push(connections[j]);
+				message.fromPort = connections[j];
+				bridge.ReceiveMessage(message);
+				cout << "sender: " << sender.GetID() << ". receiver: " << bridge.GetID() << " thinks root is: " << message.root << " " << message.rootDist << " away" << endl;
+
+			}
+		}
+		closedNodes.push_back(sender.GetID());
+	}
+
 	// DEBUG TO MAKE SURE EVERYTHING WORKED
 	cout << "CHECK BRIDGE CONNECTIONS" << endl;
 	for (int i = 0; i < nodes.size(); i++) {
@@ -43,7 +100,8 @@ Network::Network(string config_filename) {
 			Port port = GetPort(connections[j]);
 			cout << port.GetID() << " ";
 		}
-		cout << endl;
+		Configuration config = nodes[i].GetConfiguration();
+		cout << " is " << config.rootDist << " away from root " << config.root << " as told by port " << config.fromPort << " from bridge " << config.fromNode << endl;
 	}
 
 	cout << endl << "CHECK PORT CONNECTIONS" << endl;
@@ -57,14 +115,10 @@ Network::Network(string config_filename) {
 		cout << endl;
 	}
 
-	// TODO: Consider sorting ports and nodes for easier access later on.
-
-	// TODO: get the minimum spanning tree now that the network is connected
-
 }
 
 /// <summary>
-/// Finda a bridge by its id. If that bridge doesn't exist, its id will be -1/
+/// Find a bridge by its id. If that bridge doesn't exist, its id will be -1/
 /// </summary>
 /// <param name="id"></param>
 /// <returns></returns>
