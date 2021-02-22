@@ -38,28 +38,28 @@ Network::Network(string config_filename) {
 	// TODO: Consider sorting ports and nodes for easier access later on.
 	
 	// Choose bridge with smallest ID as root
-	Bridge root = nodes[0];
+	int root = 0;
 	for (int i = 0; i < nodes.size(); i++) {
-		if (nodes[i].GetID() < root.GetID()) {
-			root = nodes[i];
+		if (nodes[i].GetID() < nodes[root].GetID()) {
+			root = GetBridgeIndex(nodes[i].GetID());
 		}
 	}
 	
 	// Identify root as root
-	root.ReceiveMessage(Configuration(root.GetID(), 0, ' ', root.GetID()));		// declare the root
+	nodes[root].ReceiveMessage(Configuration(nodes[root].GetID(), 0, ' ', nodes[root].GetID()));		// declare the root
 	vector<int> closedNodes;				// vector containing IDs of bridges that have sent config messages on their ports
 	stack<int> openNodes;					// vector containint IDs of bridges yet to send messages
-	openNodes.push(root.GetID());
+	openNodes.push(nodes[root].GetID());
 
-	Bridge sender = root;
+	int sender = root;
 	// BFS approach for forwarding messages
 	cout << "CONFIGURING NETWORK" << endl;
 	while (openNodes.size() > 0 && closedNodes.size() < nodes.size()) { 
-		sender = GetBridge(openNodes.top());
+		sender = GetBridgeIndex(openNodes.top());
 		openNodes.pop();
 		bool visited = false;
 		for (int i = 0; i < closedNodes.size(); i++) {
-			if (closedNodes[i] == sender.GetID()) {
+			if (closedNodes[i] == nodes[sender].GetID()) {
 				visited = true;
 			}
 		}
@@ -68,27 +68,27 @@ Network::Network(string config_filename) {
 			continue;
 		}
 
-		Configuration message = sender.GetConfiguration();
+		Configuration message = nodes[sender].GetConfiguration();
 		message.rootDist += 1;
-		message.fromNode = sender.GetID();
-		vector<char> ports = sender.GetConnections();
-		for (int i = 0; i < ports.size(); i++) {
-			Port port = GetPort(ports[i]);
-			vector<int> connections = port.GetBridgeIDs();
+		message.fromNode = nodes[sender].GetID();
+		vector<char> links = nodes[sender].GetConnections();
+		for (int i = 0; i < links.size(); i++) {
+			int port = GetPortIndex(links[i]);
+			vector<int> connections = ports[port].GetBridgeIDs();
 			for (int j = 0; j < connections.size(); j++) {
 				// Dont forward a message back to where it came from
 				if (connections[j] == message.fromNode) {
 					continue;
 				}
-				Bridge bridge = GetBridge(connections[j]);
+				int bridge = GetBridgeIndex(connections[j]);
 				openNodes.push(connections[j]);
-				message.fromPort = connections[j];
-				bridge.ReceiveMessage(message);
-				cout << "sender: " << sender.GetID() << ". receiver: " << bridge.GetID() << " thinks root is: " << message.root << " " << message.rootDist << " away" << endl;
+				message.fromPort = ports[port].GetID();
+				nodes[bridge].ReceiveMessage(message);
+				cout << "sender: " << nodes[sender].GetID() << ". receiver: " << nodes[bridge].GetID() << " thinks root is: " << message.root << " " << message.rootDist << " away" << endl;
 
 			}
 		}
-		closedNodes.push_back(sender.GetID());
+		closedNodes.push_back(nodes[sender].GetID());
 	}
 
 	// DEBUG TO MAKE SURE EVERYTHING WORKED
@@ -97,11 +97,11 @@ Network::Network(string config_filename) {
 		cout << "Bridge " << nodes[i].GetID() << " has ports: ";
 		vector<char> connections = nodes[i].GetConnections();
 		for (int j = 0; j < connections.size(); j++) {
-			Port port = GetPort(connections[j]);
-			cout << port.GetID() << " ";
+			int port = GetPortIndex(connections[j]);
+			cout << ports[port].GetID() << " ";
 		}
 		Configuration config = nodes[i].GetConfiguration();
-		cout << " is " << config.rootDist << " away from root " << config.root << " as told by port " << config.fromPort << " from bridge " << config.fromNode << endl;
+		cout << " config: <" << config.root << ", " << config.rootDist << ", " << config.fromNode << ", " << config.fromPort << ">" << endl;
 	}
 
 	cout << endl << "CHECK PORT CONNECTIONS" << endl;
@@ -109,8 +109,8 @@ Network::Network(string config_filename) {
 		cout << "Port " << ports[i].GetID() << " is connected to: ";
 		vector<int> bridges = ports[i].GetBridgeIDs();
 		for (int j = 0; j < bridges.size(); j++) {
-			Bridge bridge = GetBridge(bridges[j]);
-			cout << bridge.GetID() << " ";
+			int bridge = GetBridgeIndex(bridges[j]);
+			cout << nodes[bridge].GetID() << " ";
 		}
 		cout << endl;
 	}
@@ -122,13 +122,13 @@ Network::Network(string config_filename) {
 /// </summary>
 /// <param name="id"></param>
 /// <returns></returns>
-Bridge Network::GetBridge(int id) {
+int Network::GetBridgeIndex(int id) {
 	for (int i = 0; i < nodes.size(); i++) {
 		if (nodes[i].GetID() == id) {
-			return nodes[i];
+			return i;
 		}
 	}
-	return Bridge(-1);
+	return -1;
 }
 
 /// <summary>
@@ -136,29 +136,33 @@ Bridge Network::GetBridge(int id) {
 /// </summary>
 /// <param name="name"></param>
 /// <returns></returns>
-Port Network::GetPort(char name) {
+int Network::GetPortIndex(char name) {
 	for (int i = 0; i < ports.size(); i++) {
 		if (ports[i].GetID() == name) {
-			return ports[i];
+			return i;
 		}
 	}
-	return Port('?');
+	return -1;
 }
 
 Bridge Network::CreateBridge(int id) {
-	Bridge bridge = GetBridge(id);
-	if (bridge.GetID() == -1) {
-		bridge = Bridge(id);
+	int index = GetBridgeIndex(id);
+	if (index == -1) {
+		return Bridge(id);
 	}
-	return bridge;
+	else {
+		return nodes[index];
+	}
 }
 
 Port Network::CreatePort(char name) {
-	Port port = GetPort(name);
-	if (port.GetID() == '?') {
-		port = Port(name);
+	int index = GetPortIndex(name);
+	if (index == -1) {
+		return Port(name);
 	}
-	return port;
+	else {
+		return ports[index];
+	}
 }
 
 /// <summary>
@@ -168,8 +172,9 @@ Port Network::CreatePort(char name) {
 /// <param name="id"></param>
 /// <returns></returns>
 void Network::AddBridge(Bridge node) {
-	Bridge bridge = GetBridge(node.GetID());
-	if (bridge.GetID() == -1) {
+	int index = GetBridgeIndex(node.GetID());
+	// If new bridge was not found, add it to network
+	if (index == -1) {
 		nodes.push_back(node);
 	}
 }
@@ -181,8 +186,9 @@ void Network::AddBridge(Bridge node) {
 /// <param name="name"></param>
 /// <returns></returns>
 void Network::AddPort(Port port) {
-	Port p = GetPort(port.GetID());
-	if (p.GetID() == '?') {
+	int index = GetPortIndex(port.GetID());
+	// If new port was not found, add it to network
+	if (index == -1) {
 		ports.push_back(port);
 	}
 }

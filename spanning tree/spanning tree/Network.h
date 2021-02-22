@@ -14,8 +14,8 @@ private:
 
 public:
 	Network(string config_filename);
-	Bridge GetBridge(int id);
-	Port GetPort(char name);
+	int GetBridgeIndex(int id);
+	int GetPortIndex(char name);
 	Bridge CreateBridge(int id);
 	Port CreatePort(char name);
 	void AddBridge(Bridge node);
