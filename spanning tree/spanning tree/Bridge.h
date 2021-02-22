@@ -9,18 +9,21 @@ struct Configuration {
 	int rootDist;		// Distance to believed root
 	char fromPort;		// ID of Which port did the config come from
 	int fromNode;		// ID of Which node (bridge) did the config come from
+	bool open;			// if the connection between fromPort and fromNode is open or closed
 
 	Configuration() {
 		root = 0;
 		rootDist = 0;
 		fromPort = ' ';
 		fromNode = 0;
+		open = true;
 	}
-	Configuration(int _root, int dist, char port, int node) {
+	Configuration(int _root, int dist, char port, int node, bool isOpen) {
 		root = _root;
 		rootDist = dist;
 		fromPort = port;
 		fromNode = node;
+		open = isOpen;
 	}
 };
 
@@ -29,11 +32,13 @@ class Bridge {
 		int id;							// identifier for this Bridge
 		Configuration bestConfig;		// Best configuation for the node
 		vector<char> connectedPorts;	// Array of ports connected to the bridge
-		// Configuration[] portConfigs	// Best configuration for each of the bridge's ports
+		vector<Configuration> portConfigs;	// Configuration for each of the bridge's ports
 
 	public:
 		int GetID();
-		Configuration GetConfiguration();
+		Configuration GetBestConfiguration();
+		Configuration GetPortConfig(int connectionIndex);
+		int GetConfigIndex(int bridgeID, char portID);
 		void SetID(int newID);
 		vector<char> GetConnections();
 		void ConnectPort(char port);
@@ -41,6 +46,6 @@ class Bridge {
 
 		Bridge(int _id) {
 			id = _id;
-			bestConfig = Configuration(id, 10, ' ', id);		// dist set to 10 initially so config messages will actually choose a new root
+			bestConfig = Configuration(id, 10, ' ', id, true);		// dist set to 10 initially so config messages will actually choose a new root
 		}
 };

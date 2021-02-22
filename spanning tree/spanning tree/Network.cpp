@@ -46,7 +46,7 @@ Network::Network(string config_filename) {
 	}
 	
 	// Identify root as root
-	nodes[root].ReceiveMessage(Configuration(nodes[root].GetID(), 0, ' ', nodes[root].GetID()));		// declare the root
+	nodes[root].ReceiveMessage(Configuration(nodes[root].GetID(), 0, ' ', nodes[root].GetID(), true));		// declare the root
 	vector<int> closedNodes;				// vector containing IDs of bridges that have sent config messages on their ports
 	stack<int> openNodes;					// vector containint IDs of bridges yet to send messages
 	openNodes.push(nodes[root].GetID());
@@ -68,24 +68,25 @@ Network::Network(string config_filename) {
 			continue;
 		}
 
-		Configuration message = nodes[sender].GetConfiguration();
+		Configuration message = nodes[sender].GetBestConfiguration();
 		message.rootDist += 1;
-		message.fromNode = nodes[sender].GetID();
 		vector<char> links = nodes[sender].GetConnections();
 		for (int i = 0; i < links.size(); i++) {
 			int port = GetPortIndex(links[i]);
 			vector<int> connections = ports[port].GetBridgeIDs();
 			for (int j = 0; j < connections.size(); j++) {
+				//cout << "port connected to " << connections[j] << " sending from " << ports[port].GetID() << endl;
 				// Dont forward a message back to where it came from
-				if (connections[j] == message.fromNode) {
-					continue;
-				}
+				//if (connections[j] == message.fromNode || connections[j] == nodes[sender].GetID()) {
+					//cout << "do not forward " << nodes[sender].GetID() << " to " << connections[j] << endl;
+				//	continue;
+				//}
+				message.fromNode = nodes[sender].GetID();
 				int bridge = GetBridgeIndex(connections[j]);
 				openNodes.push(connections[j]);
 				message.fromPort = ports[port].GetID();
+				//cout << "sender: " << nodes[sender].GetID() << ". receiver: " << nodes[bridge].GetID() << " thinks root is: " << message.root << " " << message.rootDist << " away" << endl;
 				nodes[bridge].ReceiveMessage(message);
-				cout << "sender: " << nodes[sender].GetID() << ". receiver: " << nodes[bridge].GetID() << " thinks root is: " << message.root << " " << message.rootDist << " away" << endl;
-
 			}
 		}
 		closedNodes.push_back(nodes[sender].GetID());
@@ -94,13 +95,31 @@ Network::Network(string config_filename) {
 	// DEBUG TO MAKE SURE EVERYTHING WORKED
 	cout << "CHECK BRIDGE CONNECTIONS" << endl;
 	for (int i = 0; i < nodes.size(); i++) {
-		cout << "Bridge " << nodes[i].GetID() << " has ports: ";
+		cout << "Bridge " << nodes[i].GetID() << " has ports:\n";
 		vector<char> connections = nodes[i].GetConnections();
 		for (int j = 0; j < connections.size(); j++) {
 			int port = GetPortIndex(connections[j]);
-			cout << ports[port].GetID() << " ";
+			cout << "\t"<< ports[port].GetID();
+			// print if port is open or closed by looking at the bridges port configs
+			Bridge bridge = nodes[i];
+			for (int k = 0; k < nodes.size(); k++) {
+				Configuration portConfig = bridge.GetPortConfig(bridge.GetConfigIndex(nodes[k].GetID(), ports[port].GetID()));
+				if (portConfig.fromNode != -1) {
+					cout << "<" << portConfig.root << ", " << portConfig.rootDist << ", " << portConfig.fromNode << ", " << portConfig.fromPort << "> ";
+
+					if (portConfig.open) {
+						cout << "OPEN\n";
+					}
+					else {
+						cout << "CLOSE\n";
+					}
+				}
+				else {
+					cout << endl;
+				}
+			}
 		}
-		Configuration config = nodes[i].GetConfiguration();
+		Configuration config = nodes[i].GetBestConfiguration();
 		cout << " config: <" << config.root << ", " << config.rootDist << ", " << config.fromNode << ", " << config.fromPort << ">" << endl;
 	}
 
@@ -110,7 +129,8 @@ Network::Network(string config_filename) {
 		vector<int> bridges = ports[i].GetBridgeIDs();
 		for (int j = 0; j < bridges.size(); j++) {
 			int bridge = GetBridgeIndex(bridges[j]);
-			cout << nodes[bridge].GetID() << " ";
+			Bridge _bridge = nodes[bridge];
+			cout << _bridge.GetID() << " ";
 		}
 		cout << endl;
 	}
