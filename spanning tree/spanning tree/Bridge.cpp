@@ -47,29 +47,31 @@ int Bridge::GetConfigIndex(int bridgeID, char portID) {
 /// <returns></returns>
 void Bridge::ReceiveMessage(Configuration message) {
 	// If message has not yet been sent from a node via some port, add it to the portConfigs
-	int configIndex = GetConfigIndex(message.fromNode, message.fromPort);
-	// <1, 2, 4, I>
-	bool updated = false;
-	if (message.rootDist < bestConfig.rootDist) {
+	if (message.root < bestConfig.root) {
+		message.rootDist += 1;
 		bestConfig = message;
-		updated = true;
 	}
-	else if (message.rootDist == bestConfig.rootDist) {
-		if (message.fromNode < bestConfig.fromNode) {
+	else if (message.root == bestConfig.root) {
+		if (message.rootDist < bestConfig.rootDist) {
+			message.rootDist += 1;
 			bestConfig = message;
-			updated = true;
 		}
 	}
 	bestConfig.open = true;
+}
+
+void Bridge::SendMessage(Configuration message) {
+	int configIndex = GetConfigIndex(message.fromNode, message.fromPort);
 	if (configIndex == -1) {
-		message.open = updated;
+		message.open = true;		// new messages should always be seen as open
 		portConfigs.push_back(message);
-	}
-	else if (!updated) {
-		portConfigs[configIndex].open = false;
+		return;
 	}
 
+	// if we are sending a message and the port's best configuration is this bridge, then we open the connection. Otherwise, close
+	if (portConfigs[configIndex].root < message.root) {
 
+	}
 }
 
 

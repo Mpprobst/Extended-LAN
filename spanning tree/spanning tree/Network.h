@@ -14,11 +14,14 @@ private:
 
 public:
 	Network(string config_filename);
+	void PrintNetwork();
+
 	int GetBridgeIndex(int id);
 	int GetPortIndex(char name);
 	Bridge CreateBridge(int id);
 	Port CreatePort(char name);
 	void AddBridge(Bridge node);
 	void AddPort(Port port);
+
 
 };
