@@ -198,3 +198,16 @@ void Network::AddPort(Port port) {
 		ports.push_back(port);
 	}
 }
+
+/// <summary>
+/// Takes a sequence of bridges to send messages from. 
+/// Connections between bridges and nodes that are not used should be closed 
+/// </summary>
+/// <param name="sequence"></param>
+void Network::SendMessages(char sequence[], int numMessages) {
+	for (int i = 0; i < numMessages; i++) {
+		cout << sequence[i] << " ";
+		
+	}
+	cout << endl;
+}

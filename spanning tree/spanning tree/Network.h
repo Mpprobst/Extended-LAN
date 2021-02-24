@@ -23,5 +23,6 @@ public:
 	void AddBridge(Bridge node);
 	void AddPort(Port port);
 
+	void SendMessages(char sequence[], int numMessages);
 
 };
