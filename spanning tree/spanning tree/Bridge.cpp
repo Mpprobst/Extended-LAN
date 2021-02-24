@@ -1,6 +1,7 @@
 // Bridge.cppp
 
 #include "Bridge.h"
+#include <iostream>
 using namespace std;
 
 int Bridge::GetID() {
@@ -24,20 +25,23 @@ void Bridge::ConnectPort(char port) {
 	connectedPorts.push_back(port);
 }
 
-Configuration Bridge::GetPortConfig(int connectionIndex) {
-	if (connectionIndex == -1) {
-		return Configuration(-1, -1, '?', -1, false);	// if config is invalid, return some nonsense
-	}
-	return portConfigs[connectionIndex];
-}
-
-int Bridge::GetConfigIndex(int bridgeID, char portID) {
+int Bridge::GetConfigIndex(char portID) {
+	int connectionIndex = -1;
 	for (int i = 0; i < portConfigs.size(); i++) {
-		if (portConfigs[i].fromNode == bridgeID && portConfigs[i].fromPort == portID) {
-			return i;
+		if (portConfigs[i].fromPort == portID) {
+			connectionIndex = i;
+			break;
 		}
 	}
-	return -1;
+	return connectionIndex;
+}
+
+Configuration Bridge::GetPortConfig(char portID) {
+	int connectionIndex = GetConfigIndex(portID);
+	if (connectionIndex == -1) {
+		return Configuration(-1, -1, '?', -1, true);	// if config is invalid, return some nonsense
+	}
+	return portConfigs[connectionIndex];
 }
 
 /// <summary>
@@ -56,22 +60,34 @@ void Bridge::ReceiveMessage(Configuration message) {
 			message.rootDist += 1;
 			bestConfig = message;
 		}
+		else if (message.rootDist == bestConfig.rootDist) {
+			if (message.fromNode < bestConfig.fromNode) {
+				bestConfig = message;
+			}
+		}
 	}
 	bestConfig.open = true;
+	UpdatePortConfigs();
 }
 
-void Bridge::SendMessage() {
-	int configIndex = GetConfigIndex(bestConfig.fromNode, bestConfig.fromPort);
-	if (configIndex == -1) {
-		bestConfig.open = true;		// new messages should always be seen as open
-		portConfigs.push_back(bestConfig);
-		return;
+/// <summary>
+/// When a message is sent from a port, we should update each of the best configurations.
+/// If there is not yet a configuration for a port, it is added to the connectedPorts vector.
+/// if there is a message sent by another port that has a better configuration for the port, then use that one?
+/// </summary>
+void Bridge::UpdatePortConfigs() {
+	for (int i = 0; i < connectedPorts.size(); i++) {
+		Configuration config = GetPortConfig(connectedPorts[i]);
+		bool isNew = (config.root == -1);
+		config.root = bestConfig.root;
+		config.rootDist = bestConfig.rootDist;
+		config.fromNode = id;
+		config.fromPort = connectedPorts[i];
+		if (isNew) {
+			portConfigs.push_back(config);
+		}
+		else {
+			portConfigs[GetConfigIndex(connectedPorts[i])] = config;
+		}
 	}
-
-	// if we are sending a message and the port's best configuration is this bridge, then we open the connection. Otherwise, close
-	if (portConfigs[configIndex].root < bestConfig.root) {
-
-	}
-}
-
-
+}  

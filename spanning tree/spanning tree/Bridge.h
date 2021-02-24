@@ -13,13 +13,13 @@ class Bridge {
 	public:
 		int GetID();
 		Configuration GetBestConfiguration();
-		Configuration GetPortConfig(int connectionIndex);
-		int GetConfigIndex(int bridgeID, char portID);
+		int GetConfigIndex(char portID);
+		Configuration GetPortConfig(char portID);
 		void SetID(int newID);
 		vector<char> GetConnections();
 		void ConnectPort(char port);
 		void ReceiveMessage(Configuration message);
-		void SendMessage();
+		void UpdatePortConfigs();
 
 		Bridge(int _id) {
 			id = _id;
