@@ -66,8 +66,27 @@ void Bridge::ReceiveMessage(Configuration message) {
 			}
 		}
 	}
-	bestConfig.open = true;
 	UpdatePortConfigs();
+
+	// Port configuration of port that provided best configuration should be open
+	for (int i = 0; i < portConfigs.size(); i++) {
+		if (portConfigs[i].fromPort == bestConfig.fromPort) {
+			portConfigs[i].open = true;
+		}
+		else {
+			portConfigs[i].open = false;
+		}
+	}
+	/*
+	int configIndex = GetConfigIndex(bestConfig.fromPort);
+	if (configIndex != -1) {
+		portConfigs[configIndex].open = true;
+	}
+	bestConfig.open = true;*/
+}
+
+void Bridge::ModifyPortConfig(int portIndex, Configuration message) {
+	portConfigs[portIndex] = message;
 }
 
 /// <summary>
@@ -83,6 +102,7 @@ void Bridge::UpdatePortConfigs() {
 		config.rootDist = bestConfig.rootDist;
 		config.fromNode = id;
 		config.fromPort = connectedPorts[i];
+		config.open = true;
 		if (isNew) {
 			portConfigs.push_back(config);
 		}

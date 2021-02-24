@@ -69,15 +69,35 @@ void Network::SendMessage(int startNode)
 			cout << nodes[sender].GetID() << " sends to " << nodes[bridge].GetID() << " via " << message.fromPort << " thinks root is: " << message.root << " " << message.rootDist << " away";
 			nodes[bridge].ReceiveMessage(message);
 			nodes[sender].UpdatePortConfigs();
+			// If a node sent a message to a port, then open that connection
 
-			// initialize bridge ports with the bridge's best config
-			/*vector<char> connectedPorts = nodes[bridge].GetConnections();
+			// If the best configuration on the port is not the same as the configuration the node has for that port, then close it
+			vector<char> connectedPorts = nodes[bridge].GetConnections();
 			for (int k = 0; k < connectedPorts.size(); k++) {
-				int newPort = GetPortIndex(connectedPorts[k]);
-				cout << " port " << ports[newPort].GetID() << " ";
-				ports[newPort].SendMessage(message);
-			}*/
+				int nextPort = GetPortIndex(connectedPorts[k]);
+				Configuration bestConfig = ports[nextPort].GetBestConfiguration();
+				Configuration believedConfig = nodes[bridge].GetPortConfig(ports[nextPort].GetID());
+				believedConfig.open = false;
+				if (bestConfig.root == believedConfig.root) {
+					if (bestConfig.rootDist == believedConfig.rootDist) {
+						if (bestConfig.fromNode == believedConfig.fromNode) {
+							believedConfig = bestConfig;
+							believedConfig.open = true;
+						}
+					}
+				}
+				cout << "\n\tport "<< ports[nextPort].GetID() << " best: <" << bestConfig.root << ", " << bestConfig.rootDist << ", " << bestConfig.fromNode << "> ";
+				cout << "to node believed: <" << believedConfig.root << ", " << believedConfig.rootDist << ", " << believedConfig.fromNode << ">";
+				int index = nodes[bridge].GetConfigIndex(ports[nextPort].GetID());
+				nodes[bridge].ModifyPortConfig(index, believedConfig);
+			}
 			cout << endl;
+
+			// when a message is sent to a bridge, the best believed configuration for the port from which the message came should be the ports best config
+			int configIndex = nodes[bridge].GetConfigIndex(ports[port].GetID());
+			if (configIndex != -1) {
+				nodes[bridge].ModifyPortConfig(configIndex, ports[port].GetBestConfiguration());
+			}
 		}
 	}
 }
@@ -91,7 +111,6 @@ void Network::PrintNetwork() {
 		cout << "Bridge " << nodes[i].GetID() << ": best configuration <" << config.root << ", " << config.rootDist << "> from " << config.fromNode << " via " << config.fromPort << endl;
 		vector<char> connections = nodes[i].GetConnections();
 		for (int j = 0; j < connections.size(); j++) {
-			// If the best configuration on the port is not the same as the configuration the node has for that port, then close it
 			// If the best configuration of the port is better than what the node believes, then display that
 			int port = GetPortIndex(connections[j]);
 			Configuration portConfig = nodes[i].GetPortConfig(ports[port].GetID());
@@ -103,6 +122,11 @@ void Network::PrintNetwork() {
 				if (bestConfig.rootDist < portConfig.rootDist) {
 					portConfig = bestConfig;
 				}
+				else if (bestConfig.rootDist == portConfig.rootDist) {
+					if (bestConfig.fromNode < portConfig.fromNode) {
+						portConfig = bestConfig;
+					}
+				}
 			}
 			cout << "\tport " << ports[port].GetID() << ": <" << portConfig.root << ", " << portConfig.rootDist << ", " << portConfig.fromNode << "> ";
 			if (portConfig.open) {
@@ -111,15 +135,6 @@ void Network::PrintNetwork() {
 			else {
 				cout << "closed ";
 			}
-
-			/*
-			cout << "| <" << bestConfig.root << ", " << bestConfig.rootDist << ", " << bestConfig.fromNode << "> ";
-			if (bestConfig.open) {
-				cout << "open ";
-			}
-			else {
-				cout << "closed ";
-			}*/
 			cout << endl;
 		}
 	}
