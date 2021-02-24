@@ -66,17 +66,16 @@ void Network::SendMessage(int startNode)
 		if (visited) {
 			continue;
 		}
-
+		
 		Configuration message = nodes[sender].GetBestConfiguration();
 		vector<char> links = nodes[sender].GetConnections();
 		for (int i = 0; i < links.size(); i++) {
 			int port = GetPortIndex(links[i]);
 			vector<int> connections = ports[port].GetBridgeIDs();
 			for (int j = 0; j < connections.size(); j++) {
-				//cout << "port connected to " << connections[j] << " sending from " << ports[port].GetID() << endl;
 				message.fromNode = nodes[sender].GetID();
 				int bridge = GetBridgeIndex(connections[j]);
-				openNodes.push(connections[j]);
+				//openNodes.push(connections[j]);
 				message.fromPort = ports[port].GetID();
 				//cout << "sender: " << nodes[sender].GetID() << ". receiver: " << nodes[bridge].GetID() << " via " << message.fromPort << " thinks root is: " << message.root << " " << message.rootDist << " away" << endl;
 				ports[port].SendMessage(message);
@@ -98,7 +97,7 @@ void Network::PrintNetwork() {
 		for (int j = 0; j < connections.size(); j++) {
 			int port = GetPortIndex(connections[j]);
 			Configuration portConfig = ports[port].GetBestConfiguration();
-			cout << "\tport " << ports[port].GetID() << ": <" << portConfig.root << ", " << portConfig.rootDist << ", " << portConfig.fromNode << ">";
+			cout << "\tport " << ports[port].GetID() << ": <" << portConfig.root << ", " << portConfig.rootDist << ", " << portConfig.fromNode << "> ";
 			if (portConfig.open) {
 				cout << "open\n";
 			}
@@ -211,7 +210,8 @@ void Network::AddPort(Port port) {
 /// <param name="sequence"></param>
 void Network::SendMessages(int sequence[], int numMessages) {
 	for (int i = 0; i < numMessages; i++) {
-		SendMessage(sequence[i]);
+		int bridge = GetBridgeIndex(sequence[i]);
+		SendMessage(bridge);
 	}
 	PrintNetwork();
 }
