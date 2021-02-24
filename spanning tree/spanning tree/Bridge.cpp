@@ -60,16 +60,16 @@ void Bridge::ReceiveMessage(Configuration message) {
 	bestConfig.open = true;
 }
 
-void Bridge::SendMessage(Configuration message) {
-	int configIndex = GetConfigIndex(message.fromNode, message.fromPort);
+void Bridge::SendMessage() {
+	int configIndex = GetConfigIndex(bestConfig.fromNode, bestConfig.fromPort);
 	if (configIndex == -1) {
-		message.open = true;		// new messages should always be seen as open
-		portConfigs.push_back(message);
+		bestConfig.open = true;		// new messages should always be seen as open
+		portConfigs.push_back(bestConfig);
 		return;
 	}
 
 	// if we are sending a message and the port's best configuration is this bridge, then we open the connection. Otherwise, close
-	if (portConfigs[configIndex].root < message.root) {
+	if (portConfigs[configIndex].root < bestConfig.root) {
 
 	}
 }

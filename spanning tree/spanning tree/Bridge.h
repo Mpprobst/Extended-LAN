@@ -19,7 +19,7 @@ class Bridge {
 		vector<char> GetConnections();
 		void ConnectPort(char port);
 		void ReceiveMessage(Configuration message);
-		void SendMessage(Configuration message);
+		void SendMessage();
 
 		Bridge(int _id) {
 			id = _id;

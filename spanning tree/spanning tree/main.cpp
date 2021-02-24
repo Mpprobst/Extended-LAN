@@ -4,17 +4,16 @@
 
 #include <iostream>
 #include "Network.h"
-#include <string>
 using namespace std;
 
 int main(int argc, char* argv[]) {
 	Network net = Network(argv[1]);
 	// get argument count, add those characters to the sequence array
 	int numMessages = argc - 2;
-	char* sequence = new char[numMessages];
+	int* sequence = new int[numMessages];
 
 	for (int i = 0; i < numMessages; i++) {
-		char c = argv[i+2][0];
+		int c = argv[i+2][0] - '0';
 		sequence[i] = c;
 	}
 

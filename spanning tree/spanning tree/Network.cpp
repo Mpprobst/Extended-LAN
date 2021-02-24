@@ -37,72 +37,77 @@ Network::Network(string config_filename) {
 
 	// Loop over each node and send a message to all its ports.
 	// Ports will then forward the message to their connected nodes
-	for (int n = 0; n < nodes.size(); n++) {
-		// Identify root as root
-		vector<int> closedNodes;				// vector containing IDs of bridges that have sent config messages on their ports
-		queue<int> openNodes;					// vector containint IDs of bridges yet to send messages
-		openNodes.push(nodes[n].GetID());
+	//for (int n = 0; n < nodes.size(); n++) {
+	//	SendMessage(n);
+	//}
 
-		int sender = n;
-		// BFS approach for forwarding messages
-		while (openNodes.size() > 0 && closedNodes.size() < nodes.size()) {
-			sender = GetBridgeIndex(openNodes.front());
-			openNodes.pop();
-			bool visited = false;
-			for (int i = 0; i < closedNodes.size(); i++) {
-				if (closedNodes[i] == nodes[sender].GetID()) {
-					visited = true;
-				}
-			}
+	//PrintNetwork();
+}
 
-			if (visited) {
-				continue;
-			}
+void Network::SendMessage(int startNode)
+{
+	// Identify root as root
+	vector<int> closedNodes;				// vector containing IDs of bridges that have sent config messages on their ports
+	queue<int> openNodes;					// vector containint IDs of bridges yet to send messages
+	openNodes.push(nodes[startNode].GetID());
 
-			Configuration message = nodes[sender].GetBestConfiguration();
-			vector<char> links = nodes[sender].GetConnections();
-			for (int i = 0; i < links.size(); i++) {
-				int port = GetPortIndex(links[i]);
-				vector<int> connections = ports[port].GetBridgeIDs();
-				for (int j = 0; j < connections.size(); j++) {
-					//cout << "port connected to " << connections[j] << " sending from " << ports[port].GetID() << endl;
-					// Dont forward a message back to where it came from
-					//if (connections[j] == message.fromNode || connections[j] == nodes[sender].GetID()) {
-						//cout << "do not forward " << nodes[sender].GetID() << " to " << connections[j] << endl;
-					//	continue;
-					//}
-					message.fromNode = nodes[sender].GetID();
-					int bridge = GetBridgeIndex(connections[j]);
-					openNodes.push(connections[j]);
-					message.fromPort = ports[port].GetID();
-					//cout << "sender: " << nodes[sender].GetID() << ". receiver: " << nodes[bridge].GetID() << " via " << message.fromPort << " thinks root is: " << message.root << " " << message.rootDist << " away" << endl;
-					ports[port].SendMessage(message);
-					nodes[bridge].ReceiveMessage(message);
-				}
+	int sender = startNode;
+	// BFS approach for forwarding messages
+	while (openNodes.size() > 0 && closedNodes.size() < nodes.size()) {
+		sender = GetBridgeIndex(openNodes.front());
+		openNodes.pop();
+		bool visited = false;
+		for (int i = 0; i < closedNodes.size(); i++) {
+			if (closedNodes[i] == nodes[sender].GetID()) {
+				visited = true;
 			}
-			closedNodes.push_back(nodes[sender].GetID());
 		}
-	}
 
-	PrintNetwork();
+		if (visited) {
+			continue;
+		}
+
+		Configuration message = nodes[sender].GetBestConfiguration();
+		vector<char> links = nodes[sender].GetConnections();
+		for (int i = 0; i < links.size(); i++) {
+			int port = GetPortIndex(links[i]);
+			vector<int> connections = ports[port].GetBridgeIDs();
+			for (int j = 0; j < connections.size(); j++) {
+				//cout << "port connected to " << connections[j] << " sending from " << ports[port].GetID() << endl;
+				message.fromNode = nodes[sender].GetID();
+				int bridge = GetBridgeIndex(connections[j]);
+				openNodes.push(connections[j]);
+				message.fromPort = ports[port].GetID();
+				//cout << "sender: " << nodes[sender].GetID() << ". receiver: " << nodes[bridge].GetID() << " via " << message.fromPort << " thinks root is: " << message.root << " " << message.rootDist << " away" << endl;
+				ports[port].SendMessage(message);
+				nodes[bridge].ReceiveMessage(message);
+			}
+		}
+		closedNodes.push_back(nodes[sender].GetID());
+	}
 }
 
 /// <summary>
 /// Debug to ensure the network was configured correctly
 /// </summary>
 void Network::PrintNetwork() {
-	cout << "CHECK BRIDGE CONNECTIONS" << endl;
 	for (int i = 0; i < nodes.size(); i++) {
-		cout << "Bridge " << nodes[i].GetID() << " has ports: ";
+		Configuration config = nodes[i].GetBestConfiguration();
+		cout << "Bridge " << nodes[i].GetID() << ": best configuration <" << config.root << ", " << config.rootDist << "> from " << config.fromNode << " via " << config.fromPort << endl;
 		vector<char> connections = nodes[i].GetConnections();
 		for (int j = 0; j < connections.size(); j++) {
 			int port = GetPortIndex(connections[j]);
-			cout << ports[port].GetID() << " ";
+			Configuration portConfig = ports[port].GetBestConfiguration();
+			cout << "\tport " << ports[port].GetID() << ": <" << portConfig.root << ", " << portConfig.rootDist << ", " << portConfig.fromNode << ">";
+			if (portConfig.open) {
+				cout << "open\n";
+			}
+			else {
+				cout << "closed\n";
+			}
 		}
-		Configuration config = nodes[i].GetBestConfiguration();
-		cout << "\tconfig: <" << config.root << ", " << config.rootDist << ", " << config.fromNode << ", " << config.fromPort << ">" << endl;
 	}
-
+	/*
 	cout << endl << "CHECK PORT CONNECTIONS" << endl;
 	for (int i = 0; i < ports.size(); i++) {
 		cout << "Port " << ports[i].GetID() << " is connected to: ";
@@ -120,7 +125,7 @@ void Network::PrintNetwork() {
 		else {
 			cout << " CLOSED" << endl;
 		}
-	}
+	}*/
 }
 
 /// <summary>
@@ -204,10 +209,9 @@ void Network::AddPort(Port port) {
 /// Connections between bridges and nodes that are not used should be closed 
 /// </summary>
 /// <param name="sequence"></param>
-void Network::SendMessages(char sequence[], int numMessages) {
+void Network::SendMessages(int sequence[], int numMessages) {
 	for (int i = 0; i < numMessages; i++) {
-		cout << sequence[i] << " ";
-		
+		SendMessage(sequence[i]);
 	}
-	cout << endl;
+	PrintNetwork();
 }

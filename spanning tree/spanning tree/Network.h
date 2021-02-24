@@ -14,6 +14,7 @@ private:
 
 public:
 	Network(string config_filename);
+	void SendMessage(int startNode);
 	void PrintNetwork();
 
 	int GetBridgeIndex(int id);
@@ -23,6 +24,6 @@ public:
 	void AddBridge(Bridge node);
 	void AddPort(Port port);
 
-	void SendMessages(char sequence[], int numMessages);
+	void SendMessages(int sequence[], int numMessages);
 
 };

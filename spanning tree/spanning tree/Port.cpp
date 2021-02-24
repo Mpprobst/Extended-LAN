@@ -25,7 +25,6 @@ Configuration Port::GetBestConfiguration() {
 /// if bridge 2 is closer to the root, and 2 is sending messages, then bridge 2 makes more sense
 /// </summary>
 void Port::SendMessage(Configuration message) {
-	message.rootDist += 1;
 	if (message.rootDist < bestConfig.rootDist) {
 		bestConfig = message;
 	}
