@@ -38,4 +38,3 @@ A bridge's configuration MUST be separated by a new line, and each id for a port
 
 ### Limitations
 The program is a bit inefficient due to a lack of knowledge of properly using pointers, so all access to the bridges and ports are done by first gathering the index of the bridge or port by searching it, then modifying the bridge/port by directly accessing the bridge/port vector with the found index.
-Also, it is known that in the first example test provided by the handout that Bridge 3 will incorrectly identify its best configuration acquired via port A. This causes port A to be seen as open rather than closed in this test.  
