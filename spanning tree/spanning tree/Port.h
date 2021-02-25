@@ -1,5 +1,4 @@
 #pragma once
-// Port.h
 #include <vector>
 using namespace std;
 
@@ -7,8 +6,8 @@ using namespace std;
 struct Configuration {
 	int root;			// The believed root
 	int rootDist;		// Distance to believed root
-	char fromPort;		// ID of Which port did the config come from
-	int fromNode;		// ID of Which node (bridge) did the config come from
+	char fromPort;		// ID of which port the config come from
+	int fromNode;		// ID of which node the config come from
 	bool open;			// if the connection between fromPort and fromNode is open or closed
 
 	Configuration() {
@@ -29,18 +28,19 @@ struct Configuration {
 
 class Port {
 	private:
-		char name;			// identifier for this port
-		vector<int> availableBridges;
-		Configuration bestConfig;
+		char name;							// identifier for this port
+		vector<int> availableBridges;		// bridges accessible by this port
+		Configuration bestConfig;	
 	public:
-		char GetID();
-		vector<int> GetBridgeIDs();
-		Configuration GetBestConfiguration();
-		void SendMessage(Configuration message);
 		Port(char _name) {
 			name = _name;
-			bestConfig = Configuration(100, 100, name, 100, true);		// initialized with 100 becasue we dont know what bridges could send messages yet
+			bestConfig = Configuration(100, 100, name, 100, true);		// initialized with 100 becasue we don't know what bridges could send messages yet
 		}
+
+		char GetID();
+		vector<int> GetBridgeIDs();
 		void ConnectBridge(int bridge);
-		
+		Configuration GetBestConfiguration();
+
+		void SendMessage(Configuration message);
 };

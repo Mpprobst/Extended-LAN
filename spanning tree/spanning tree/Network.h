@@ -1,5 +1,4 @@
 #pragma once
-// Network.h
 
 #include <string>
 #include <fstream>
@@ -14,16 +13,16 @@ private:
 
 public:
 	Network(string config_filename);
-	void SendMessage(int startNode);
-	void PrintNetwork();
 
-	int GetBridgeIndex(int id);
-	int GetPortIndex(char name);
 	Bridge CreateBridge(int id);
 	Port CreatePort(char name);
 	void AddBridge(Bridge node);
 	void AddPort(Port port);
+	int GetBridgeIndex(int id);
+	int GetPortIndex(char name);
 
+	void SendMessage(int sender);
+	void PrintNetwork();
 	void SendMessages(int sequence[], int numMessages);
 
 };

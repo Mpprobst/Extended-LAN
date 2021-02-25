@@ -7,8 +7,9 @@
 using namespace std;
 
 int main(int argc, char* argv[]) {
+	// TODO: ensure the parameters are valid
+
 	Network net = Network(argv[1]);
-	// get argument count, add those characters to the sequence array
 	int numMessages = argc - 2;
 	int* sequence = new int[numMessages];
 

@@ -1,7 +1,6 @@
 // Port.cpp
 
 #include "Port.h"
-#include <iostream>
 
 char Port::GetID() {
 	return name;
@@ -20,7 +19,7 @@ Configuration Port::GetBestConfiguration() {
 }
 
 /// <summary>
-/// When a bridge uses a port to send a message, we need to check if this is the best configuration for sending the message.
+/// When a bridge uses a port to send a message, check if the message is a better configuration for this port
 /// </summary>
 void Port::SendMessage(Configuration message) {
 	if (message.root < bestConfig.root) {
