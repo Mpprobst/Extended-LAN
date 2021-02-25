@@ -49,14 +49,12 @@ Configuration Bridge::GetPortConfig(char portID) {
 /// <param name="message"></param>
 /// <returns></returns>
 void Bridge::ReceiveMessage(Configuration message) {
-	// If message has not yet been sent from a node via some port, add it to the portConfigs
+	message.rootDist++;
 	if (message.root < bestConfig.root) {
-		message.rootDist += 1;
 		bestConfig = message;
 	}
 	else if (message.root == bestConfig.root) {
 		if (message.rootDist < bestConfig.rootDist) {
-			message.rootDist += 1;
 			bestConfig = message;
 		}
 		else if (message.rootDist == bestConfig.rootDist) {

@@ -227,7 +227,7 @@ void Network::SendMessages(int sequence[], int numMessages) {
 	for (int i = 0; i < numMessages; i++) {
 		int bridge = GetBridgeIndex(sequence[i]);
 		if (bridge != -1) {
-			cout << sequence[i];
+			cout << sequence[i] << " ";
 			SendMessage(bridge);
 		}
 		else {
