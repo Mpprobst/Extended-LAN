@@ -1,6 +1,7 @@
 #include "Network.h"
 #include <algorithm>
 #include <queue>
+#include <iostream>
 
 Network::Network(string config_filename) {
 	ifstream config_file;
@@ -162,9 +163,19 @@ void Network::SendMessage(int sender) {
 /// respective best configurations.
 /// </summary>
 void Network::PrintNetwork() {
+	cout << "----------------------\n"
+		 << "NETWORK CONFIGURATION:\n"
+		 << "----------------------\n";
 	for (int i = 0; i < nodes.size(); i++) {
 		Configuration config = nodes[i].GetBestConfiguration();
-		cout << "Bridge " << nodes[i].GetID() << ": best configuration <" << config.root << ", " << config.rootDist << "> from " << config.fromNode << " via " << config.fromPort << endl;
+		cout << "Bridge " << nodes[i].GetID() << ": best configuration <" << config.root << ", " << config.rootDist << "> from " << config.fromNode << " via ";
+		if (config.fromPort == '?') {
+			cout << "none\n";
+		}
+		else {
+			cout << config.fromPort << endl;
+
+		}
 		vector<char> connections = nodes[i].GetConnections();
 		for (int j = 0; j < connections.size(); j++) {
 			// If the best configuration of the port is better than what the node believes, then display that configuration
@@ -212,14 +223,17 @@ void Network::PrintNetwork() {
 /// <param name="sequence"></param> ids of bridges to send messages from.
 /// <param name="numMessages"></param> total number of messages to send.
 void Network::SendMessages(int sequence[], int numMessages) {
+	cout << "Sending messages on bridges: ";
 	for (int i = 0; i < numMessages; i++) {
 		int bridge = GetBridgeIndex(sequence[i]);
 		if (bridge != -1) {
+			cout << sequence[i];
 			SendMessage(bridge);
 		}
 		else {
 			cout << "ERROR: bridge " << sequence[i] << " does not exist in the network\n";
 		}
 	}
+	cout << endl << endl;
 	PrintNetwork();
 }
