@@ -67,17 +67,17 @@ void Bridge::ReceiveMessage(Configuration message) {
 		}
 	}
 	UpdatePortConfigs();
-
+	/*
 	// Port configuration of port that provided best configuration should be open
 	for (int i = 0; i < portConfigs.size(); i++) {
 		if (portConfigs[i].fromPort == bestConfig.fromPort) {
 			portConfigs[i].open = true;
 		}
 		else {
-			portConfigs[i].open = false;
+			//portConfigs[i].open = false;
 		}
 	}
-	/*
+	
 	int configIndex = GetConfigIndex(bestConfig.fromPort);
 	if (configIndex != -1) {
 		portConfigs[configIndex].open = true;
